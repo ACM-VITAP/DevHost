@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Evaluations</h2>
+
+        {% for s in submissions %}
+        <div class="card">
+            <p>Submission ID: {{ s._id }}</p>
+
+            {% if user.role == "admin" %}
+            <form action="/evaluate/{{ s._id }}" method="post">
+                <input name="marks" placeholder="Marks">
+                <textarea name="remarks" placeholder="Remarks"></textarea>
+                <button>Evaluate</button>
+            </form>
+            {% else %}
+            <p>Waiting for evaluation</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</body>
+
+</html>

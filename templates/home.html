@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="nav-left">
+            <span class="brand">ACM Portal</span>
+        </div>
+
+        <nav class="nav-right">
+            <a href="/events">Events</a>
+            <a href="/evaluation">Evaluation</a>
+            <a href="/profile">Profile</a>
+            {% if user.role == "admin" %}
+            <a href="/admin" class="admin-link">Admin</a>
+            {% endif %}
+            <a href="/logout" class="logout-link">Logout</a>
+        </nav>
+    </header>
+
+    <!-- HERO -->
+    <main class="hero">
+        <div class="hero-card">
+            <h1>Welcome back, <span>{{ user.name }}</span></h1>
+
+            <p class="subtitle">
+                Manage hackathons, solve problems, submit solutions,
+                and track your progress — all in one place.
+            </p>
+
+            <div class="cta-group">
+                <a href="/events" class="primary-btn">Explore Events</a>
+                <a href="https://acmvitap.onrender.com" target="_blank" class="secondary-btn">
+                    External Registration
+                </a>
+            </div>
+        </div>
+    </main>
+
+</body>
+
+</html>

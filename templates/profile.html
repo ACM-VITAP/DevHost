@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="/static/profile.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Profile</h2>
+
+        <form method="post">
+            <label for="name">Name:</label>
+            <input name="name" value="{{ user.name }}">
+
+            <label for="bio">Bio:</label>
+            <textarea name="bio">{{ user.bio }}</textarea>
+
+            <label for="age">Age:</label>
+            <input name="age" value="{{ user.age }}">
+
+            <label for="gender">Gender:</label>
+            <input name="gender" value="{{ user.gender }}">
+
+            <button>Save</button>
+        </form>
+    </div>
+</body>
+
+</html>

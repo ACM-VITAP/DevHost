@@ -1,0 +1,120 @@
+/* Page background */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", "Segoe UI", sans-serif;
+    background: #f4f6f9;
+    color: #222;
+}
+
+/* Container */
+.problems-page-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+/* Card */
+.problems-page {
+    width: 100%;
+    max-width: 1100px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Title */
+.problems-page h2 {
+    margin-bottom: 25px;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+/* Table wrapper */
+.problems-table-wrapper {
+    overflow-x: auto;
+}
+
+/* Table */
+.problems-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+/* Header */
+.problems-table thead {
+    background: #f1f3f5;
+}
+
+.problems-table th {
+    text-align: left;
+    padding: 14px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+}
+
+/* Body rows */
+.problems-table td {
+    padding: 16px;
+    border-top: 1px solid #eaeaea;
+    vertical-align: top;
+    font-size: 14px;
+}
+
+/* Hover */
+.problems-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* Title cell */
+.problem-title-cell {
+    font-weight: 600;
+    color: #111;
+}
+
+/* Description cell */
+.problem-description-cell {
+    color: #555;
+    line-height: 1.5;
+    max-width: 420px;
+}
+
+/* Button */
+.view-problem-button {
+    display: inline-block;
+    padding: 8px 14px;
+    background: #2563eb;
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.view-problem-button:hover {
+    background: #1e40af;
+}
+
+/* Empty state */
+.problems-empty-state {
+    padding: 40px;
+    text-align: center;
+    color: #777;
+    font-size: 15px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .problems-page {
+        padding: 20px;
+    }
+
+    .problem-description-cell {
+        max-width: none;
+    }
+}

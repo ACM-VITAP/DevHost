@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Problem Statements</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='problems.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <div class="problems-page-container">
+        <div class="problems-page">
+            <h2>Problem Statements</h2>
+
+            <div class="problems-table-wrapper">
+
+                <table class="problems-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Max Size</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for p in problems %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+
+                            <td class="problem-title-cell">
+                                {{ p.title }}
+                            </td>
+
+                            <td class="problem-description-cell">
+                                {{ p.description }}
+                            </td>
+
+                            <td>
+                                {{ p.max_size_mb | default(20) }} MB
+                            </td>
+
+                            <td>
+                                <a href="/submit/{{ p._id }}" class="view-problem-button">
+                                    Submit
+                                </a>
+                            </td>
+                        </tr>
+
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="problems-empty-state">
+                                No problem statements available yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

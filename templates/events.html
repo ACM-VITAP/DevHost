@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Events</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='events.css') }}">
+</head>
+
+<body>
+
+    <main class="page">
+        <header class="page-header">
+            <h2>Events</h2>
+            <p>Browse and participate in active events</p>
+        </header>
+
+        <!-- ✅ CONTAINER -->
+        <section class="events-container">
+
+            {% for event in events %}
+            <div class="event-card">
+                <h3>{{ event.title }}</h3>
+                <p>{{ event.description }}</p>
+                <a href="/problems/{{ event._id }}">View Problems</a>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                No events available right now.
+            </div>
+            {% endfor %}
+
+        </section>
+    </main>
+
+</body>
+
+</html>

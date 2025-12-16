@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/static/admin.css">
+</head>
+
+<body>
+    <main class="dashboard">
+
+        <!-- Header -->
+        <header class="dashboard-header">
+            <h1>Admin Dashboard</h1>
+            <p>Manage events and problems from one place</p>
+        </header>
+
+        <!-- Main Grid -->
+        <section class="dashboard-grid">
+
+            <!-- Left: Add Event -->
+            <section class="panel">
+                <h2>Add Event</h2>
+
+                <form method="post">
+                    <div class="field">
+                        <label>Event Title</label>
+                        <input name="title" placeholder="Eg: Hackathon 2025" required>
+                    </div>
+
+                    <div class="field">
+                        <label>Description</label>
+                        <textarea name="description" placeholder="Short description..." required></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="field">
+                            <label>Start Date</label>
+                            <input type="date" name="start" required>
+                        </div>
+
+                        <div class="field">
+                            <label>End Date</label>
+                            <input type="date" name="end" required>
+                        </div>
+                    </div>
+
+                    <button type="submit">Create Event</button>
+                </form>
+            </section>
+
+            <!-- Right: Events -->
+            <section class="panel panel-soft">
+                <h2>All Events</h2>
+
+                <div class="events">
+                    {% for e in events %}
+                    <div class="event-card">
+                        <div>
+                            <h3>{{ e.title }}</h3>
+                        </div>
+                        <a href="/admin/problems/{{ e._id }}">Manage</a>
+                    </div>
+                    {% else %}
+                    <div class="empty">No events created yet</div>
+                    {% endfor %}
+                </div>
+            </section>
+
+        </section>
+    </main>
+</body>
+
+</html>
