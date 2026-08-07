@@ -205,13 +205,10 @@ def build_sort3_tests():
     inp, out = sort_case(vals)
     tests.append(make_test(inp, out, False, 7))
 
-    vals = [rng.randint(-10**9, 10**9) for _ in range(100_000)]
-    inp, out = sort_case(vals)
-    tests.append(make_test(inp, out, False, 8))
-
-    vals = list(range(100_000, 0, -1))
-    inp, out = sort_case(vals)
-    tests.append(make_test(inp, out, False, 9))
+    # Dropped the two N=100,000 cases (previously order 8 & 9) - correct
+    # O(n log n) solutions were hitting Time Limit Exceeded on Render's
+    # throttled free-tier CPU even though they ran fine locally. 50,000
+    # is still large enough to fail an O(n^2) solution.
 
     return tests
 
