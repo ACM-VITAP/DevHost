@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluations</title>
+    <link rel="stylesheet" href="/static/evaluation.css">
 </head>
 
 <body>
@@ -11,18 +14,28 @@
 
         {% for s in submissions %}
         <div class="card">
-            <p>Submission ID: {{ s._id }}</p>
+            <p class="sub-title">{{ s.user_name }} — {{ s.problem_title }}</p>
+            <p class="sub-id">Submission ID: {{ s._id }}</p>
 
-            {% if user.role == "admin" %}
+            {% if s.verdict %}
+            <p class="sub-id">
+                Auto-graded: <strong>{{ s.verdict }}</strong>
+                ({{ s.passed }}/{{ s.total }} test cases, {{ s.language }})
+            </p>
+            {% endif %}
+
+            {% if user and user.role == "admin" %}
             <form action="/evaluate/{{ s._id }}" method="post">
-                <input name="marks" placeholder="Marks">
-                <textarea name="remarks" placeholder="Remarks"></textarea>
+                <input name="marks" type="number" placeholder="Marks" value="{{ s.marks if s.marks is not none else '' }}">
+                <textarea name="remarks" placeholder="Remarks">{{ s.remarks }}</textarea>
                 <button>Evaluate</button>
             </form>
             {% else %}
-            <p>Waiting for evaluation</p>
+            <p class="waiting">Waiting for evaluation</p>
             {% endif %}
         </div>
+        {% else %}
+        <p class="empty">No submissions yet</p>
         {% endfor %}
     </div>
 </body>

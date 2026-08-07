@@ -4,3 +4,4 @@ pymongo
 Werkzeug
 dnspython
 gunicorn
+python-dotenv

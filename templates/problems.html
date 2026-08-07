@@ -12,42 +12,59 @@
 <body>
     <div class="problems-page-container">
         <div class="problems-page">
-            <h2>Problem Statements</h2>
+            <div class="problems-header">
+                <h2>{{ event.title }}</h2>
+                <p class="problems-subtitle">Solve challenges, run your code against sample cases, and submit for auto-grading.</p>
+            </div>
 
             <div class="problems-table-wrapper">
 
                 <table class="problems-table">
                     <thead>
                         <tr>
-                            <th>#</th>
+                            <th class="col-status">Status</th>
                             <th>Title</th>
-                            <th>Description</th>
-                            <th>Max Size</th>
-                            <th>Action</th>
+                            <th class="col-difficulty">Difficulty</th>
+                            <th class="col-type">Type</th>
+                            <th class="col-action">Action</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         {% for p in problems %}
                         <tr>
-                            <td>{{ loop.index }}</td>
+                            <td class="col-status">
+                                <span class="status-dot status-{{ p.status }}" title="{{ p.status | capitalize }}"></span>
+                            </td>
 
                             <td class="problem-title-cell">
-                                {{ p.title }}
+                                {% if p.get("problem_type", "file") == "code" %}
+                                <a href="/solve/{{ p._id }}">{{ p.title }}</a>
+                                {% else %}
+                                <a href="/submit/{{ p._id }}">{{ p.title }}</a>
+                                {% endif %}
                             </td>
 
-                            <td class="problem-description-cell">
-                                {{ p.description }}
+                            <td class="col-difficulty">
+                                <span class="diff-badge diff-{{ (p.difficulty or 'Medium') | lower }}">
+                                    {{ p.difficulty or "Medium" }}
+                                </span>
                             </td>
 
-                            <td>
-                                {{ p.max_size_mb | default(20) }} MB
+                            <td class="col-type">
+                                {% if p.get("problem_type", "file") == "code" %}
+                                <span class="type-badge type-code">Code &amp; Run</span>
+                                {% else %}
+                                <span class="type-badge type-file">File Upload</span>
+                                {% endif %}
                             </td>
 
-                            <td>
-                                <a href="/submit/{{ p._id }}" class="view-problem-button">
-                                    Submit
-                                </a>
+                            <td class="col-action">
+                                {% if p.get("problem_type", "file") == "code" %}
+                                <a href="/solve/{{ p._id }}" class="view-problem-button">Solve</a>
+                                {% else %}
+                                <a href="/submit/{{ p._id }}" class="view-problem-button">Submit</a>
+                                {% endif %}
                             </td>
                         </tr>
 

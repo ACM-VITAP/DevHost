@@ -13,6 +13,10 @@ body {
     min-height: 100vh;
 }
 
+.event-card a {
+    margin-right: 10px;
+}
+
 /* ========== PAGE WRAPPER ========== */
 .page {
     max-width: 1200px;

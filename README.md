@@ -20,7 +20,8 @@ for viewing problems, submitting solutions, and tracking rankings.
 <h3>👨‍💼 Admin Features</h3>
 <ul>
     <li>Create and manage hackathon events</li>
-    <li>Add, edit, and delete problem statements</li>
+    <li>Add, edit, and delete problem statements (Code &amp; Run or File Upload type)</li>
+    <li>Add sample and hidden test cases per coding problem for auto-grading</li>
     <li>Enforce submission constraints (file size limits)</li>
     <li>Evaluate submissions with marks and remarks</li>
     <li>Generate rankings automatically</li>
@@ -30,11 +31,50 @@ for viewing problems, submitting solutions, and tracking rankings.
 <ul>
     <li>Secure registration and login</li>
     <li>Browse active hackathon events</li>
-    <li>View problem statements in a tabular format</li>
-    <li>Submit solutions online</li>
+    <li>View problem statements in a HackerRank-style problem list (difficulty, status)</li>
+    <li>Solve coding problems in an in-browser editor (Python 3, C, C++, Java)</li>
+    <li>Run code against custom input or sample test cases before submitting</li>
+    <li>Submit code for instant auto-grading against hidden test cases</li>
+    <li>Submit files for problems that require manual review</li>
     <li>View scores and leaderboard rankings</li>
     <li>Update personal profile information</li>
 </ul>
+
+<hr>
+
+<h2>🧑‍⚖️ Online Judge (Code &amp; Run problems)</h2>
+<p>
+Problems marked <code>problem_type: "code"</code> get a full HackerRank-style solving
+experience at <code>/solve/&lt;problem_id&gt;</code>:
+</p>
+<ul>
+    <li><strong>Description tab</strong> — statement, input/output format, constraints, and sample I/O</li>
+    <li><strong>Code editor</strong> (CodeMirror) — language dropdown (Python 3 / C++17 / C / Java), autosaves per-language drafts to the browser</li>
+    <li><strong>Run Code</strong> — executes against custom stdin via <code>/api/run/&lt;problem_id&gt;</code>, shows stdout/stderr/compile errors</li>
+    <li><strong>Submit</strong> — runs against every test case via <code>/api/submit_code/&lt;problem_id&gt;</code>, stores a verdict (Accepted / Wrong Answer / Compile Error), and auto-computes marks as <code>passed/total * 100</code></li>
+</ul>
+<p>
+Execution is handled by <code>judge.py</code> using <code>subprocess</code> with per-run
+CPU/memory/timeout limits — not a hardened container sandbox. Fine for a trusted-participant
+hackathon on a single host; for public/untrusted code, run each submission inside a locked-down
+container (Docker/firejail/gVisor) instead.
+</p>
+<p>
+<strong>Deployment note:</strong> the host needs <code>gcc</code>, <code>g++</code>, and a JDK
+(<code>javac</code>) installed for the C/C++/Java options to compile — Python 3 works anywhere
+Python itself is installed. If a compiler is missing, that language will show
+"Compiler not available on server" instead of crashing the app.
+</p>
+<p>
+Admins manage test cases per problem at <code>/admin/testcases/&lt;problem_id&gt;</code> —
+each test case is an (input, expected output) pair, optionally flagged as a <em>sample</em>
+(shown to participants) vs <em>hidden</em> (used only for grading).
+</p>
+<p>
+Run <code>python3 seed_spiderverse.py</code> (with your <code>MONGO_URI</code> set) to load
+the Spider-Verse Hackathon problem sets, including 9 generated + verified test cases each for
+the three sorting problems.
+</p>
 
 <hr>
 

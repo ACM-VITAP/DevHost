@@ -17,7 +17,6 @@
             <p>Browse and participate in active events</p>
         </header>
 
-        <!-- ✅ CONTAINER -->
         <section class="events-container">
 
             {% for event in events %}
@@ -25,6 +24,7 @@
                 <h3>{{ event.title }}</h3>
                 <p>{{ event.description }}</p>
                 <a href="/problems/{{ event._id }}">View Problems</a>
+                <a href="/rankings/{{ event._id }}">View Rankings</a>
             </div>
             {% else %}
             <div class="empty-state">
