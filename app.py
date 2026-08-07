@@ -256,7 +256,7 @@ def admin_problems(event_id):
                 "output_format": request.form.get("output_format", ""),
                 "sample_input": request.form.get("sample_input", "").replace("\r\n", "\n"),
                 "sample_output": request.form.get("sample_output", "").replace("\r\n", "\n"),
-                "time_limit_ms": int(request.form.get("time_limit_ms") or 2000),
+                "time_limit_ms": int(request.form.get("time_limit_ms") or 3000),
                 "starter_code": {
                     "python3": request.form.get("starter_python", ""),
                     "c": request.form.get("starter_c", ""),
@@ -310,7 +310,7 @@ def edit_problem(problem_id):
                 "output_format": request.form.get("output_format", ""),
                 "sample_input": request.form.get("sample_input", "").replace("\r\n", "\n"),
                 "sample_output": request.form.get("sample_output", "").replace("\r\n", "\n"),
-                "time_limit_ms": int(request.form.get("time_limit_ms") or 2000),
+                "time_limit_ms": int(request.form.get("time_limit_ms") or 3000),
                 "starter_code": {
                     "python3": request.form.get("starter_python", ""),
                     "c": request.form.get("starter_c", ""),
@@ -459,7 +459,7 @@ def api_run(problem_id):
     if not code.strip():
         return jsonify({"error": "Write some code before running"}), 400
 
-    time_limit = (problem.get("time_limit_ms", 2000) / 1000.0) + 1  # headroom for custom runs
+    time_limit = (problem.get("time_limit_ms", 3000) / 1000.0) + 1  # headroom for custom runs
     result = judge.run_code(language, code, stdin_text, time_limit_sec=time_limit)
     return jsonify(result)
 
@@ -482,7 +482,11 @@ def api_submit_code(problem_id):
     if not tests:
         return jsonify({"error": "No test cases configured for this problem yet"}), 400
 
-    time_limit = problem.get("time_limit_ms", 2000) / 1000.0
+    # Same +1s headroom as /api/run, so Submit isn't stricter than Run for
+    # identical code - on CPU-throttled hosts (e.g. Render free tier) the two
+    # endpoints previously used different effective limits, which could make
+    # a submission time out even though the sample "Run" passed fine.
+    time_limit = (problem.get("time_limit_ms", 3000) / 1000.0) + 1
     results = []
     passed = 0
     compile_error = None
