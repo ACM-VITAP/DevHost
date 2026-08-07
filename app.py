@@ -13,6 +13,21 @@ from bson.errors import InvalidId
 
 import judge
 
+
+def _normalize_output(text):
+    """Normalizes trivial, meaningless formatting noise before comparing judge
+    output - CRLF vs LF line endings, trailing whitespace on each line, and
+    leading/trailing blank lines - without touching meaningful internal
+    spacing (column alignment in problems like the pizza bill still matters
+    and is still enforced)."""
+    text = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+    lines = [line.rstrip() for line in text.split("\n")]
+    while lines and lines[0] == "":
+        lines.pop(0)
+    while lines and lines[-1] == "":
+        lines.pop()
+    return "\n".join(lines)
+
 # Load a local .env file if present (python-dotenv). This only affects local
 # dev - on Render/Railway/Heroku/Vercel you set these in the platform's own
 # env var settings instead, and this call is a harmless no-op there since
@@ -499,7 +514,7 @@ def api_submit_code(problem_id):
             for i, t in enumerate(tests, start=1):
                 r = judge.run_prepared(prepared, t.get("input", ""), time_limit_sec=time_limit)
 
-                ok = (r.get("stdout") or "").strip() == (t.get("output") or "").strip()
+                ok = _normalize_output(r.get("stdout")) == _normalize_output(t.get("output"))
                 if ok:
                     passed += 1
 

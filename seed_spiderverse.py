@@ -23,11 +23,15 @@ import os
 import random
 from pymongo import MongoClient
 
-MONGO_URI = os.environ.get(
-    "MONGO_URI",
-    "mongodb+srv://charanachanta2:Charan1114@cluster0.ysxk5ry.mongodb.net/DevHost"
-    "?retryWrites=true&w=majority&appName=Cluster0"
-)
+MONGO_URI = os.environ.get("MONGO_URI")
+if not MONGO_URI:
+    raise SystemExit(
+        "MONGO_URI environment variable is not set. Refusing to run with a "
+        "hardcoded fallback credential - set MONGO_URI to your (rotated) "
+        "connection string before running this script, e.g.:\n"
+        '  $env:MONGO_URI = "mongodb+srv://user:pass@cluster0.xxxx.mongodb.net/DevHost?retryWrites=true&w=majority"\n'
+        "  python seed_spiderverse.py"
+    )
 
 EVENT_TITLE = "Spider-Verse Hackathon"
 
@@ -270,6 +274,140 @@ public class Main {
 }
 """
 
+STARTER_PY_PIZZA = """# IMPORTANT: read every input value SILENTLY - do NOT print any prompt text
+# (no "Enter Name: ", no "Choose item: ", etc). Only the final bill below
+# should ever be printed. The judge compares your stdout byte-for-byte
+# against the exact bill format, so any extra printed text will fail it.
+#
+# Input format (one value per line):
+#   Line 1: customer name
+#   Line 2: delivery address
+#   Line 3: number of people at the table
+#   Then, repeating until a 0 is read:
+#     one line: menu item number (1-4), or 0 to stop ordering
+#     one line: quantity (only present when the item number was not 0)
+#   Final line: "yes" or "no" - was delivery late?
+#
+# Menu (fixed prices):
+#   1. Margherita Pizza - Rs.150
+#   2. Pepperoni Pizza  - Rs.180
+#   3. Garlic Bread     - Rs.60
+#   4. Soda             - Rs.40
+# Each menu item is chosen at most once per order.
+#
+# Output - print EXACTLY this format (see problem statement for the full
+# worked example):
+#   ----- ORDER SUMMARY -----
+#   Customer: <name> | People: <people>
+#   Address: <address>
+#   <blank line>
+#   <item name left-padded to 17 chars>x<qty>  = <amount>   (one line per item ordered, in order chosen)
+#   -------------------------- (26 dashes)
+#   <"Subtotal" left-padded to 21 chars>: <subtotal>
+#   <"Delivery Tax (5%)" left-padded to 21 chars>: <tax>          (5% of subtotal, rounded to nearest integer)
+#   <"Friendly Discount" left-padded to 21 chars>: <-100 if people >= 4, else 0>
+#   <"Late Fee" left-padded to 21 chars>: <30 if late, else 0>
+#   -------------------------- (26 dashes)
+#   <"Total Payable" left-padded to 21 chars>: <total>
+#   -------------------------- (26 dashes)
+#   Thwip! Thanks for ordering.
+
+import sys
+
+MENU = [
+    ("Margherita Pizza", 150),
+    ("Pepperoni Pizza", 180),
+    ("Garlic Bread", 60),
+    ("Soda", 40),
+]
+
+# TODO: implement the billing logic and print the exact format described above.
+"""
+
+
+
+# ---------------------------------------------------------------- #
+# PIZZA - Pete's Pizza-Time Billing System
+# ---------------------------------------------------------------- #
+
+PIZZA_MENU = [
+    ("Margherita Pizza", 150),
+    ("Pepperoni Pizza", 180),
+    ("Garlic Bread", 60),
+    ("Soda", 40),
+]
+
+
+def pizza_case(name, address, people, order, late):
+    """order: list of (menu_index_1_based, qty). Returns (input_text, output_text)
+    using the exact same reference logic used to build the problem statement's
+    worked example, so grading matches a straightforward correct implementation."""
+    lines = [name, address, str(people)]
+    for idx, qty in order:
+        lines.append(str(idx))
+        lines.append(str(qty))
+    lines.append("0")
+    lines.append("yes" if late else "no")
+    input_text = "\n".join(lines) + "\n"
+
+    items = []
+    subtotal = 0
+    for idx, qty in order:
+        item_name, price = PIZZA_MENU[idx - 1]
+        amt = price * qty
+        items.append((item_name, qty, amt))
+        subtotal += amt
+
+    tax = round(subtotal * 0.05)
+    discount = 100 if people >= 4 else 0
+    late_fee = 30 if late else 0
+    total = subtotal + tax - discount + late_fee
+
+    out_lines = [
+        "----- ORDER SUMMARY -----",
+        f"Customer: {name} | People: {people}",
+        f"Address: {address}",
+        "",
+    ]
+    for item_name, qty, amt in items:
+        out_lines.append(f"{item_name:<17}x{qty}  = {amt}")
+    out_lines.append("-" * 26)
+    out_lines.append(f"{'Subtotal':<21}: {subtotal}")
+    out_lines.append(f"{'Delivery Tax (5%)':<21}: {tax}")
+    out_lines.append(f"{'Friendly Discount':<21}: {-discount if discount else 0}")
+    out_lines.append(f"{'Late Fee':<21}: {late_fee}")
+    out_lines.append("-" * 26)
+    out_lines.append(f"{'Total Payable':<21}: {total}")
+    out_lines.append("-" * 26)
+    out_lines.append("Thwip! Thanks for ordering.")
+    output_text = "\n".join(out_lines)
+
+    return input_text, output_text
+
+
+def build_pizza_tests():
+    tests = []
+
+    # Sample - matches the brief's worked example exactly (Total Payable: 518).
+    inp, out = pizza_case("MJ", "20 Ingram Street", 5, [(2, 2), (4, 5)], True)
+    tests.append(make_test(inp, out, True, 1))
+
+    # No discount (people < 4), no late fee, two items.
+    inp, out = pizza_case("Peter", "10 Baxter St", 2, [(1, 2), (3, 1)], False)
+    tests.append(make_test(inp, out, False, 2))
+
+    # Discount at exact threshold (people == 4), no late fee, one item.
+    inp, out = pizza_case("Gwen", "5 Webb Ave", 4, [(2, 3)], False)
+    tests.append(make_test(inp, out, False, 3))
+
+    # No discount, late fee applies, single item, small subtotal.
+    inp, out = pizza_case("Miles", "42 Visions Rd", 1, [(3, 1)], True)
+    tests.append(make_test(inp, out, False, 4))
+
+    return tests
+
+
+# ---------------------------------------------------------------- #
 
 def main():
     client = MongoClient(MONGO_URI)
@@ -373,18 +511,74 @@ def main():
         t["problem_id"] = pid
         db.test_cases.insert_one(t)
 
-    upsert_problem(
-        "Pete's Pizza-Time Billing System", "file",
+    pid = upsert_problem(
+        "Pete's Pizza-Time Billing System", "code",
         difficulty="Medium",
         description=(
             "Between web-slinging, Peter delivers pizza. Build a program that takes customer "
             "details, displays a food menu, lets the customer order multiple items in a loop, "
             "adds a 5% delivery tax, applies a flat Rs.100 'Friendly Neighborhood Discount' for "
-            "groups of 4+, adds a Rs.30 late fee if applicable, and prints an itemized bill. "
-            "Full menu and sample interaction are in the event brief."
+            "groups of 4+, adds a Rs.30 late fee if applicable, and prints an itemized bill.\n\n"
+            "IMPORTANT - this is auto-graded, so the output format below is a strict "
+            "requirement, not just an example: read every input value silently (no prompt "
+            "text of your own printed to stdout) and print ONLY the exact bill format shown "
+            "in the starter code / output format below. Any extra printed text (menus, "
+            "prompts, debug output) will cause every test case to fail, since the judge "
+            "compares stdout byte-for-byte."
         ),
+        input_format=(
+            "Line 1: customer name\nLine 2: delivery address\nLine 3: number of people\n"
+            "Then, repeating until a 0 is read: one line with a menu item number (1-4, or 0 "
+            "to stop ordering), followed by one line with the quantity (only when the item "
+            "number wasn't 0). Each menu item is chosen at most once per order.\n"
+            "Final line: \"yes\" or \"no\" - was delivery late?\n\n"
+            "Fixed menu:\n1. Margherita Pizza - Rs.150\n2. Pepperoni Pizza  - Rs.180\n"
+            "3. Garlic Bread     - Rs.60\n4. Soda             - Rs.40"
+        ),
+        output_format=(
+            "----- ORDER SUMMARY -----\n"
+            "Customer: <name> | People: <people>\n"
+            "Address: <address>\n"
+            "<blank line>\n"
+            "<item name left-padded to 17 chars>x<qty>  = <amount>   (one line per ordered item, in order chosen)\n"
+            "-------------------------- (26 dashes)\n"
+            "Subtotal (left-padded label to 21 chars): <subtotal>\n"
+            "Delivery Tax (5%) (left-padded to 21 chars): <tax, 5% of subtotal rounded to nearest integer>\n"
+            "Friendly Discount (left-padded to 21 chars): <-100 if people >= 4, else 0>\n"
+            "Late Fee (left-padded to 21 chars): <30 if late, else 0>\n"
+            "-------------------------- (26 dashes)\n"
+            "Total Payable (left-padded to 21 chars): <subtotal + tax - discount + late fee>\n"
+            "-------------------------- (26 dashes)\n"
+            "Thwip! Thanks for ordering."
+        ),
+        constraints=(
+            "1 <= number of people <= 20\n1 <= quantity per item <= 100\n"
+            "Each of the 4 menu items is ordered at most once per order (at least 1 item ordered)."
+        ),
+        sample_input="MJ\n20 Ingram Street\n5\n2\n2\n4\n5\n0\nyes\n",
+        sample_output=(
+            "----- ORDER SUMMARY -----\n"
+            "Customer: MJ | People: 5\n"
+            "Address: 20 Ingram Street\n\n"
+            "Pepperoni Pizza  x2  = 360\n"
+            "Soda             x5  = 200\n"
+            "--------------------------\n"
+            "Subtotal             : 560\n"
+            "Delivery Tax (5%)    : 28\n"
+            "Friendly Discount    : -100\n"
+            "Late Fee             : 30\n"
+            "--------------------------\n"
+            "Total Payable        : 518\n"
+            "--------------------------\n"
+            "Thwip! Thanks for ordering."
+        ),
+        time_limit_ms=2000,
+        starter_code={"python3": STARTER_PY_PIZZA, "cpp": STARTER_CPP, "c": STARTER_C, "java": STARTER_JAVA},
         max_size_mb=20,
     )
+    for t in build_pizza_tests():
+        t["problem_id"] = pid
+        db.test_cases.insert_one(t)
 
     # ---- SET 3 ----
     pid = upsert_problem(
