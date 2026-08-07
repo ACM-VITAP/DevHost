@@ -58,11 +58,22 @@ if not MONGO_URI:
     MONGO_URI = "mongodb://localhost:27017/DevHost"
 app.config["MONGO_URI"] = MONGO_URI
 
-app.config["UPLOAD_FOLDER"] = "uploads"
+if os.environ.get("VERCEL"):
+    # Vercel's filesystem is read-only except /tmp, and /tmp is wiped between
+    # invocations - files saved here will NOT persist. This just stops the
+    # app from crashing on import; file-upload submissions still won't
+    # survive on Vercel. Use the Docker deploy path if you need real
+    # persistent uploads.
+    app.config["UPLOAD_FOLDER"] = "/tmp/uploads"
+else:
+    app.config["UPLOAD_FOLDER"] = "uploads"
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024  # 20MB hard limit
 
 mongo = PyMongo(app)
-os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+try:
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+except OSError as e:
+    app.logger.error(f"Could not create upload folder {app.config['UPLOAD_FOLDER']!r}: {e}")
 
 ALLOWED_EXTENSIONS = {"zip", "ppt", "pptx", "pdf"}
 
@@ -476,33 +487,36 @@ def api_submit_code(problem_id):
     passed = 0
     compile_error = None
 
-    for i, t in enumerate(tests, start=1):
-        r = judge.run_code(language, code, t.get("input", ""), time_limit_sec=time_limit)
+    prepared = judge.prepare(language, code)
+    if prepared.get("compile_error"):
+        compile_error = prepared["compile_error"]
+    else:
+        try:
+            for i, t in enumerate(tests, start=1):
+                r = judge.run_prepared(prepared, t.get("input", ""), time_limit_sec=time_limit)
 
-        if r.get("compile_error"):
-            compile_error = r["compile_error"]
-            break
+                ok = (r.get("stdout") or "").strip() == (t.get("output") or "").strip()
+                if ok:
+                    passed += 1
 
-        ok = (r.get("stdout") or "").strip() == (t.get("output") or "").strip()
-        if ok:
-            passed += 1
-
-        entry = {
-            "index": i,
-            "is_sample": bool(t.get("is_sample")),
-            "passed": ok,
-            "timed_out": bool(r.get("timed_out")),
-        }
-        # Only leak the actual input/expected/output back to the client for
-        # sample cases, so hidden test cases stay hidden after a submission.
-        if t.get("is_sample"):
-            entry.update({
-                "input": t.get("input", ""),
-                "expected": t.get("output", ""),
-                "actual": r.get("stdout", ""),
-                "stderr": r.get("stderr", "")[:2000],
-            })
-        results.append(entry)
+                entry = {
+                    "index": i,
+                    "is_sample": bool(t.get("is_sample")),
+                    "passed": ok,
+                    "timed_out": bool(r.get("timed_out")),
+                }
+                # Only leak the actual input/expected/output back to the client for
+                # sample cases, so hidden test cases stay hidden after a submission.
+                if t.get("is_sample"):
+                    entry.update({
+                        "input": t.get("input", ""),
+                        "expected": t.get("output", ""),
+                        "actual": r.get("stdout", ""),
+                        "stderr": r.get("stderr", "")[:2000],
+                    })
+                results.append(entry)
+        finally:
+            judge.cleanup(prepared)
 
     total = len(tests)
     if compile_error:

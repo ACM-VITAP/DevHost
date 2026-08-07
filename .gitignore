@@ -1,33 +1,5 @@
-# Environment / secrets
-.env
-.env.local
-
-# Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.egg-info/
-.eggs/
-*.egg
-
-# Virtual environments
-venv/
-env/
-.venv/
-ENV/
-
-# Uploaded files (user-submitted content, shouldn't be in git)
+*.pyc
+.env
 uploads/*
 !uploads/.gitkeep
-
-# IDE / editor
-.vscode/
-.idea/
-*.swp
-
-# OS junk
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
