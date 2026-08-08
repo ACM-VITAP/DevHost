@@ -29,6 +29,8 @@
             <span class="problem-name">{{ problem.title }}</span>
         </div>
         <div class="topbar-right">
+            <span id="violation-indicator" class="violation-indicator hidden">Strikes: <span id="violation-count">0</span>/3</span>
+            <button id="fullscreen-btn" class="tool-btn ghost" type="button" title="Enter fullscreen">⛶ Fullscreen</button>
             <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle color theme">☾ Dark</button>
             <span id="verdict-pill-holder">
             {% if last_submission %}
@@ -41,6 +43,23 @@
             </span>
         </div>
     </header>
+
+    <!-- FULLSCREEN / PROCTORING GATE -->
+    <div id="fullscreen-gate" class="fullscreen-gate">
+        <div class="fullscreen-gate-card">
+            <h2>Proctored Problem</h2>
+            <p>This problem must be solved in fullscreen mode. Leaving fullscreen or switching tabs counts as a
+                strike — after <strong>3 strikes</strong> your current code is submitted automatically.</p>
+            <button id="enter-fullscreen-btn" class="tool-btn primary">Enter Fullscreen &amp; Start</button>
+        </div>
+    </div>
+
+    <!-- VIOLATION WARNING TOAST -->
+    <div id="violation-toast" class="violation-toast hidden">
+        <strong id="violation-toast-title">Warning</strong>
+        <p id="violation-toast-body"></p>
+        <button id="violation-toast-resume" class="tool-btn primary">Resume in Fullscreen</button>
+    </div>
 
     <div class="solve-body">
 
@@ -298,14 +317,16 @@
         });
 
         // ---------- Submit ----------
-        submitBtn.addEventListener("click", async () => {
+        async function submitCode(auto) {
             switchConsoleTab("results");
             submitBtn.disabled = true;
-            submitBtn.textContent = "Judging...";
+            submitBtn.textContent = auto ? "Auto-submitting..." : "Judging...";
 
             const summary = document.getElementById("results-summary");
             const list = document.getElementById("results-list");
-            summary.textContent = "Running your code against all test cases...";
+            summary.textContent = auto
+                ? "Fullscreen violation limit reached — submitting your current code..."
+                : "Running your code against all test cases...";
             summary.className = "results-summary";
             list.innerHTML = "";
 
@@ -362,12 +383,143 @@
                 submitBtn.disabled = false;
                 submitBtn.textContent = "Submit";
             }
-        });
+        }
+
+        submitBtn.addEventListener("click", () => submitCode(false));
 
         function escapeHtml(str) {
             const div = document.createElement("div");
             div.innerText = str == null ? "" : str;
             return div.innerHTML;
+        }
+
+        // ---------- Fullscreen proctoring ----------
+        const MAX_VIOLATIONS = 3;
+        const VIOLATION_KEY = "devhost_violations_" + PROBLEM_ID;
+
+        const gate = document.getElementById("fullscreen-gate");
+        const enterFullscreenBtn = document.getElementById("enter-fullscreen-btn");
+        const fullscreenBtn = document.getElementById("fullscreen-btn");
+        const violationIndicator = document.getElementById("violation-indicator");
+        const violationCountEl = document.getElementById("violation-count");
+        const toast = document.getElementById("violation-toast");
+        const toastTitle = document.getElementById("violation-toast-title");
+        const toastBody = document.getElementById("violation-toast-body");
+        const toastResumeBtn = document.getElementById("violation-toast-resume");
+
+        let violations = parseInt(sessionStorage.getItem(VIOLATION_KEY) || "0", 10);
+        let hasStarted = false;
+        let autoSubmitted = false;
+        let suppressNextExit = false; // avoids double-counting our own programmatic exits
+
+        function isFullscreen() {
+            return !!(document.fullscreenElement || document.webkitFullscreenElement);
+        }
+
+        function requestFullscreen() {
+            const el = document.documentElement;
+            const req = el.requestFullscreen || el.webkitRequestFullscreen;
+            if (req) return req.call(el);
+            return Promise.reject(new Error("Fullscreen API not supported"));
+        }
+
+        function updateViolationUI() {
+            violationCountEl.textContent = violations;
+            violationIndicator.classList.toggle("hidden", violations === 0);
+            violationIndicator.classList.toggle("danger", violations >= MAX_VIOLATIONS - 1);
+        }
+
+        function lockEditor() {
+            submitBtn.disabled = true;
+            runBtn.disabled = true;
+            editor.setOption("readOnly", true);
+        }
+
+        function startSession() {
+            hasStarted = true;
+            gate.classList.add("hidden");
+            updateViolationUI();
+        }
+
+        enterFullscreenBtn.addEventListener("click", () => {
+            requestFullscreen().then(startSession).catch(() => {
+                // Browser blocked fullscreen (e.g. unsupported) - let them proceed
+                // without it rather than lock them out entirely.
+                startSession();
+            });
+        });
+
+        fullscreenBtn.addEventListener("click", () => {
+            if (!isFullscreen()) {
+                suppressNextExit = true;
+                requestFullscreen().then(() => {
+                    toast.classList.add("hidden");
+                }).catch(() => {});
+            }
+        });
+
+        toastResumeBtn.addEventListener("click", () => {
+            suppressNextExit = true;
+            requestFullscreen().then(() => {
+                toast.classList.add("hidden");
+            }).catch(() => {
+                toast.classList.add("hidden");
+            });
+        });
+
+        function registerViolation(reason) {
+            if (!hasStarted || autoSubmitted) return;
+            if (suppressNextExit) {
+                suppressNextExit = false;
+                return;
+            }
+
+            violations += 1;
+            sessionStorage.setItem(VIOLATION_KEY, String(violations));
+            updateViolationUI();
+
+            if (violations >= MAX_VIOLATIONS) {
+                autoSubmitted = true;
+                toastTitle.textContent = "Auto-submitted";
+                toastBody.textContent = "You reached " + MAX_VIOLATIONS + " strikes (" + reason +
+                    "). Your current code has been submitted automatically.";
+                toastResumeBtn.classList.add("hidden");
+                toast.classList.remove("hidden");
+                lockEditor();
+                submitCode(true);
+            } else {
+                toastTitle.textContent = "Warning: Strike " + violations + "/" + MAX_VIOLATIONS;
+                toastBody.textContent = reason + ". Return to fullscreen to keep working - " +
+                    (MAX_VIOLATIONS - violations) + " strike(s) remaining before auto-submit.";
+                toastResumeBtn.classList.remove("hidden");
+                toast.classList.remove("hidden");
+            }
+        }
+
+        document.addEventListener("fullscreenchange", () => {
+            if (!hasStarted) return;
+            if (!isFullscreen()) {
+                registerViolation("Exited fullscreen");
+            } else {
+                toast.classList.add("hidden");
+            }
+        });
+
+        document.addEventListener("visibilitychange", () => {
+            if (!hasStarted || autoSubmitted) return;
+            if (document.hidden) {
+                registerViolation("Switched away from this tab");
+            }
+        });
+
+        // Resume any in-progress violation count from a previous load of this
+        // problem (e.g. an accidental refresh) so strikes can't be reset for free.
+        if (violations > 0) {
+            updateViolationUI();
+        }
+        if (violations >= MAX_VIOLATIONS) {
+            autoSubmitted = true;
+            lockEditor();
         }
     </script>
 </body>
