@@ -9,6 +9,9 @@
 </head>
 
 <body>
+    <link rel="stylesheet" href="{{ url_for('static', filename='portal.css') }}">
+    {% include '_portal_nav.html' %}
+    <a href="/events" class="back-link">&larr; Back to events</a>
     <div class="container">
         <h2>Submit File</h2>
         <p class="problem-title">{{ problem.title }}</p>

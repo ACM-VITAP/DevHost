@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title>SpiderVerse | Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
@@ -14,37 +14,38 @@
     <!-- NAVBAR -->
     <header class="navbar">
         <div class="nav-left">
-            <span class="brand">ACM Portal</span>
+            <a href="/home" class="brand"><span class="brand-mark">✦</span> SPIDERVERSE</a>
         </div>
 
         <nav class="nav-right">
-            <a href="/events">Events</a>
-            <a href="/evaluation">Evaluation</a>
+            <a href="/events">Challenges</a>
+            <a href="/evaluation">My Progress</a>
             <a href="/profile">Profile</a>
             {% if user.role == "admin" %}
             <a href="/admin" class="admin-link">Admin</a>
             {% endif %}
-            <a href="/logout" class="logout-link">Logout</a>
+            <a href="/logout" class="logout-link">Log out</a>
         </nav>
     </header>
 
     <!-- HERO -->
     <main class="hero">
-        <div class="hero-card">
-            <h1>Welcome back, <span>{{ user.name }}</span></h1>
+        <div class="hero-content">
+            <p class="eyebrow">ACM VIT-AP &nbsp; / &nbsp; THE SPIDERVERSE</p>
+            <h1>Great power.<br><span>Greater code.</span></h1>
 
             <p class="subtitle">
-                Manage hackathons, solve problems, submit solutions,
-                and track your progress — all in one place.
+                Welcome back, <strong>{{ user.name }}</strong>.<br>
+                Your next challenge is waiting. Suit up and show us what you can build.
             </p>
 
             <div class="cta-group">
-                <a href="/events" class="primary-btn">Explore Events</a>
-                <a href="https://acmvitap.onrender.com" target="_blank" class="secondary-btn">
-                    External Registration
-                </a>
+                <a href="/events" class="primary-btn">Explore challenges <span>↗</span></a>
+                <a href="https://acmvitap.onrender.com" target="_blank" class="secondary-btn">Register for an event</a>
             </div>
+            <div class="hero-meta"><span class="pulse"></span> SYSTEM ONLINE <i></i> YOUR WEB-SLINGER IS READY</div>
         </div>
+        <div class="scroll-cue"><span></span> SCROLL TO EXPLORE</div>
     </main>
 
 </body>

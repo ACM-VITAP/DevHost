@@ -7,7 +7,7 @@ from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from functools import wraps
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 
@@ -91,6 +91,7 @@ except OSError as e:
     app.logger.error(f"Could not create upload folder {app.config['UPLOAD_FOLDER']!r}: {e}")
 
 ALLOWED_EXTENSIONS = {"zip", "ppt", "pptx", "pdf"}
+CONTEST_DURATION_MINUTES = 45
 
 # ================== HELPERS ================== #
 
@@ -103,6 +104,49 @@ def to_object_id(id_str):
         return ObjectId(id_str)
     except (InvalidId, TypeError):
         return None
+
+def problem_category(problem):
+    """Contest grouping: explicitly tagged problems win; legacy data falls back
+    to the existing three code + three file problem split."""
+    category = (problem.get("contest_category") or "").strip().lower()
+    if category in {"java", "java basics", "sorting"}:
+        return "java" if category != "sorting" else "sorting"
+    return "sorting" if problem.get("problem_type") == "code" else "java"
+
+def contest_started_at(event_id):
+    key = f"contest_started_{event_id}"
+    raw = session.get(key)
+    if raw:
+        try:
+            return datetime.fromisoformat(raw)
+        except ValueError:
+            session.pop(key, None)
+    started = datetime.now()
+    session[key] = started.isoformat()
+    return started
+
+def contest_status(event_id):
+    started = contest_started_at(event_id)
+    ends = started + timedelta(minutes=CONTEST_DURATION_MINUTES)
+    remaining = max(0, int((ends - datetime.now()).total_seconds()))
+    submissions = list(mongo.db.submissions.find({"user_id": session["user_id"], "event_id": event_id}))
+    chosen = set()
+    for submission in submissions:
+        selected_problem = mongo.db.problem_statements.find_one({"_id": to_object_id(submission.get("problem_id"))})
+        if selected_problem:
+            chosen.add(problem_category(selected_problem))
+    return {"started_at": started, "ends_at": ends, "remaining_seconds": remaining,
+            "java_done": "java" in chosen, "sorting_done": "sorting" in chosen,
+            "complete": {"java", "sorting"}.issubset(chosen)}
+
+def contest_problem_allowed(problem):
+    status = contest_status(problem["event_id"])
+    category = problem_category(problem)
+    if status["remaining_seconds"] <= 0:
+        return False, "The 45-minute contest has ended."
+    if status[f"{category}_done"]:
+        return False, f"You have already selected your {category.title()} question."
+    return True, ""
 
 def login_required(f):
     @wraps(f)
@@ -413,7 +457,13 @@ def problems(event_id):
         return redirect(url_for("events"))
 
     problems = list(mongo.db.problem_statements.find({"event_id": event_id}))
+    contest = contest_status(event_id)
+    if contest["remaining_seconds"] <= 0:
+        session.clear()
+        flash("The 45-minute contest has ended. Please log in again.")
+        return redirect(url_for("login"))
     for p in problems:
+        p["contest_category"] = problem_category(p)
         sub = mongo.db.submissions.find_one({
             "user_id": session["user_id"],
             "problem_id": str(p["_id"])
@@ -425,7 +475,8 @@ def problems(event_id):
         else:
             p["status"] = "solved"
 
-    return render_template("problems.html", event=event, problems=problems)
+    return render_template("problems.html", event=event, problems=problems, contest=contest,
+                           contest_duration_minutes=CONTEST_DURATION_MINUTES)
 
 # ================== SOLVE (CODE EDITOR) ================== #
 
@@ -455,7 +506,8 @@ def solve(problem_id):
         problem=problem,
         samples=samples,
         starter=problem.get("starter_code", {}) or {},
-        last_submission=last_submission
+        last_submission=last_submission,
+        contest=contest_status(problem["event_id"])
     )
 
 @app.route("/api/run/<problem_id>", methods=["POST"])
@@ -554,6 +606,7 @@ def api_submit_code(problem_id):
             "user_id": session["user_id"],
             "problem_id": problem_id,
             "event_id": problem["event_id"],
+            "contest_category": problem_category(problem),
             "language": language,
             "code": code,
             "verdict": verdict,
@@ -619,6 +672,7 @@ def submit(problem_id):
             "user_id": session["user_id"],
             "problem_id": problem_id,
             "event_id": problem["event_id"],
+            "contest_category": problem_category(problem),
             "filename": filename,
             "submitted_at": datetime.now(),
             "marks": None,
@@ -628,7 +682,7 @@ def submit(problem_id):
         flash("Submission successful")
         return redirect(url_for("home"))
 
-    return render_template("submit.html", problem=problem)
+    return render_template("submit.html", problem=problem, contest=contest_status(problem["event_id"]))
 
 # ================== FILE VIEW ================== #
 

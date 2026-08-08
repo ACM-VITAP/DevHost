@@ -186,3 +186,5 @@ body {
         max-width: none;
     }
 }
+
+.contest-timer-bar{display:flex;align-items:center;gap:12px;margin:18px 0;padding:10px 14px;border:1px solid rgba(239,38,51,.35);border-radius:6px;background:rgba(239,38,51,.08);font-size:11px;color:#ef2633;letter-spacing:1px}.contest-timer-bar strong{font-size:20px;letter-spacing:0;color:#ef2633}.expired{color:#b91c1c!important}

@@ -7,11 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='events.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='portal.css') }}">
 </head>
 
 <body>
+    {% include '_portal_nav.html' %}
 
     <main class="page">
+        <a href="/home" class="back-link">&larr; Back to dashboard</a>
         <header class="page-header">
             <h2>Events</h2>
             <p>Browse and participate in active events</p>

@@ -6,9 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Problems</title>
     <link rel="stylesheet" href="/static/admin_problems.css">
+    <link rel="stylesheet" href="/static/portal.css">
 </head>
 
 <body>
+    {% include '_portal_nav.html' %}
+    <a href="/admin" class="back-link">&larr; Back to admin</a>
     <main class="page">
 
         <!-- Header -->
@@ -81,7 +84,7 @@
 
                     <div class="field">
                         <label>Time Limit (ms)</label>
-                        <input type="number" name="time_limit_ms" value="3000" min="500" step="500">
+                        <input type="number" name="time_limit_ms" value="2000" min="500" step="500">
                     </div>
 
                     <h3 class="subheading">Starter Code <span class="hint">(shown by default in the editor per language, optional)</span></h3>

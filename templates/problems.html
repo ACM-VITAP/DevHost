@@ -10,12 +10,16 @@
 </head>
 
 <body>
+    <link rel="stylesheet" href="{{ url_for('static', filename='portal.css') }}">
+    {% include '_portal_nav.html' %}
     <div class="problems-page-container">
         <div class="problems-page">
+            <a href="/events" class="back-link">&larr; Back to events</a>
             <div class="problems-header">
                 <h2>{{ event.title }}</h2>
                 <p class="problems-subtitle">Solve challenges, run your code against sample cases, and submit for auto-grading.</p>
             </div>
+            <section class="contest-timer-bar"><span>CONTEST TIME</span><strong id="contest-timer">45:00</strong></section>
 
             <div class="problems-table-wrapper">
 
@@ -24,7 +28,6 @@
                         <tr>
                             <th class="col-status">Status</th>
                             <th>Title</th>
-                            <th class="col-difficulty">Difficulty</th>
                             <th class="col-type">Type</th>
                             <th class="col-action">Action</th>
                         </tr>
@@ -43,12 +46,6 @@
                                 {% else %}
                                 <a href="/submit/{{ p._id }}">{{ p.title }}</a>
                                 {% endif %}
-                            </td>
-
-                            <td class="col-difficulty">
-                                <span class="diff-badge diff-{{ (p.difficulty or 'Medium') | lower }}">
-                                    {{ p.difficulty or "Medium" }}
-                                </span>
                             </td>
 
                             <td class="col-type">
@@ -81,6 +78,12 @@
             </div>
         </div>
     </div>
+    <script>
+      let remaining = {{ contest.remaining_seconds }};
+      const timer = document.getElementById('contest-timer');
+      function tick(){ const m=Math.floor(remaining/60), s=remaining%60; timer.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; if(remaining<=0){timer.classList.add('expired');} remaining=Math.max(0,remaining-1); }
+      tick(); setInterval(tick,1000);
+    </script>
 </body>
 
 </html>

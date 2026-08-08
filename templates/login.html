@@ -2,19 +2,22 @@
 <html>
 
 <head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpiderVerse | Login</title>
     <link rel="stylesheet" href="/static/login.css">
 </head>
 
 <body>
-    <div class="container">
-        <h2>Login</h2>
+    <main class="login-shell"><section class="login-art"><div class="art-copy"><span>SPIDERVERSE</span><h1>Find your<br><em>inner hero.</em></h1><p>Every challenge is a chance to make your mark.</p></div><div class="art-credit">ACM VIT-AP / HACKATHON PORTAL</div></section><section class="container">
+        <div class="login-brand"><span>✦</span> SPIDERVERSE</div><p class="kicker">WELCOME BACK, HERO</p><h2>Enter the<br><strong>Spider-Verse.</strong></h2>
+        {% with messages = get_flashed_messages() %}{% if messages %}<div class="flash-message">{{ messages[0] }}</div>{% endif %}{% endwith %}
         <form method="post">
-            <input name="email" placeholder="Email" required>
-            <input name="password" type="password" placeholder="Password" required>
-            <button>Login</button>
+            <label>Email or username<input name="email" placeholder="admin" required></label>
+            <label>Password<input name="password" type="password" placeholder="••••••••" required></label>
+            <button>Enter the portal <span>↗</span></button>
         </form>
-        <a href="/register">Register</a>
-    </div>
+        <p class="register-copy">New to the verse? <a href="/register">Create an account</a></p>
+    </section></main>
 </body>
 
 </html>

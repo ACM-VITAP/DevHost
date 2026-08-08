@@ -9,8 +9,11 @@
 </head>
 
 <body>
+    <link rel="stylesheet" href="{{ url_for('static', filename='portal.css') }}">
+    {% include '_portal_nav.html' %}
     <div class="rankings-page-container">
         <div class="rankings-page">
+            <a href="/events" class="back-link">&larr; Back to events</a>
             <h2>Leaderboard</h2>
 
             <div class="rankings-table-wrapper">
